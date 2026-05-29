@@ -5,7 +5,15 @@ __pycache__/
 data/sample_audio/output.wav
 data/sample_audio/reconstructed.wav
 
+# IDE
 .vscode/
 .idea/
 
+# Logs
 *.log
+
+# Secrets / Crypto Keys
+keys/private_key.pem
+
+# Optional (if regenerating keys locally)
+keys/public_key.pem
