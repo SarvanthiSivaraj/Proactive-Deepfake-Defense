@@ -1,0 +1,11 @@
+defn/
+__pycache__/
+*.pyc
+
+data/sample_audio/output.wav
+data/sample_audio/reconstructed.wav
+
+.vscode/
+.idea/
+
+*.log
