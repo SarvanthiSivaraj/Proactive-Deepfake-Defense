@@ -84,3 +84,26 @@ def sign_message(
 
         message
     )
+def verify_signature(
+
+        public_key,
+
+        signature,
+
+        message
+):
+
+    try:
+
+        public_key.verify(
+
+            signature,
+
+            message
+        )
+
+        return True
+
+    except Exception:
+
+        return False
