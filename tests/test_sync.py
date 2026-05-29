@@ -13,14 +13,6 @@ from src.sync.synchronizer import *
 
 sync = generate_gold_code()
 
-print(
-
-    "\nGold Code:"
-)
-
-print(sync)
-
-
 signal = np.random.choice(
 
     [-1,1],
@@ -41,23 +33,13 @@ signal[
 ] = sync
 
 
-idx, conf = find_sync(
+result = find_sync(
 
     signal,
 
     sync
 )
 
-print(
+print("\nSync Result:")
 
-    "\nDetected Position:",
-
-    idx
-)
-
-print(
-
-    "Confidence:",
-
-    conf
-)
+print(result)

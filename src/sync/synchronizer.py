@@ -22,14 +22,35 @@ def find_sync(
         correlation
     )
 
-    confidence = np.max(
+    peak = np.max(
 
         correlation
     )
 
-    return (
+    mean_corr = np.mean(
 
-        best_index,
-
-        confidence
+        correlation
     )
+
+    std_corr = np.std(
+
+        correlation
+    )
+
+    confidence = (
+
+        peak - mean_corr
+
+    ) / (
+
+        std_corr + 1e-8
+    )
+
+    return {
+
+        "position": best_index,
+
+        "confidence": confidence,
+
+        "peak": peak
+    }
