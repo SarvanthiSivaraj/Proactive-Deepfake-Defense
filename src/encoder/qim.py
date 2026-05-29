@@ -7,7 +7,7 @@ def embed_qim(
 
         bit,
 
-        delta=0.1
+        delta=0.01
 ):
 
     q = np.round(

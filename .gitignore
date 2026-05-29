@@ -4,6 +4,7 @@ __pycache__/
 
 data/sample_audio/output.wav
 data/sample_audio/reconstructed.wav
+data/sample_audio/watermarked.wav
 
 # IDE
 .vscode/
