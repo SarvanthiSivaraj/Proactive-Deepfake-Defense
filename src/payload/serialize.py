@@ -2,7 +2,6 @@ import json
 
 
 def serialize_payload(
-
         payload
 ):
 
@@ -14,3 +13,14 @@ def serialize_payload(
     )
 
     return serialized.encode()
+
+
+def deserialize_payload(
+        payload_bytes
+):
+
+    decoded = payload_bytes.decode()
+
+    return json.loads(
+        decoded
+    )

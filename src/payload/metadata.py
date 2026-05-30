@@ -3,18 +3,17 @@ import time
 
 def generate_metadata():
 
-    metadata = {
+    metadata={
 
-        "id": "AUDIO001",
+        "id":"AUDIO001",
 
-        "timestamp": int(
+        "timestamp":int(
 
             time.time()
+
         ),
 
-        "generator":
-
-        "VOICE_GEN_V1"
+        "generator":"VOICE_GEN_V1"
     }
 
     return metadata
