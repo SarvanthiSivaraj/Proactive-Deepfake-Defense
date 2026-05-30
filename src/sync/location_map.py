@@ -10,13 +10,13 @@ def generate_location_map(
         seed=42
 ):
 
-    rng = np.random.RandomState(
+    rng=np.random.RandomState(
         seed
     )
 
-    rows, cols = magnitude.shape
+    rows,cols=magnitude.shape
 
-    energy = np.mean(
+    energy=np.mean(
 
         np.abs(magnitude),
 
@@ -32,7 +32,7 @@ def generate_location_map(
             min(rows,350)
     ):
 
-        e = energy[r]
+        e=energy[r]
 
         if 0.1 < e < 10:
 
@@ -53,7 +53,10 @@ def generate_location_map(
 
             locations.append(
 
-                (int(r),int(c))
+                (
+                    int(r),
+                    int(c)
+                )
             )
 
     rng.shuffle(

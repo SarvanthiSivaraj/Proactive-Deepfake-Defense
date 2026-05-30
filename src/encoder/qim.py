@@ -8,26 +8,25 @@ REPEAT = 9
 
 def embed_qim(value, bit):
 
-    remainder = np.mod(
+    remainder=np.mod(
         value,
         DELTA
     )
 
-    base = value - remainder
+    base=value-remainder
 
-    if bit == 0:
+    if bit==0:
 
-        target = 0.05
+        target=0.05
 
     else:
 
-        target = 0.45
+        target=0.45
 
-    embedded = base + target
+    embedded=base+target
 
-    # strengthen 1-bit embedding
-
-    if bit == 1:
+    # stronger 1-bit protection
+    if bit==1:
 
         embedded += 0.15
 
@@ -43,9 +42,9 @@ def embed_payload_qim(
         seed=42
 ):
 
-    mag = magnitude.copy()
+    mag=magnitude.copy()
 
-    locations = generate_location_map(
+    locations=generate_location_map(
 
         magnitude,
 
@@ -64,14 +63,14 @@ def embed_payload_qim(
 
         for _ in range(REPEAT):
 
-            row,col = locations[idx]
+            row,col=locations[idx]
 
-            idx += 1
+            idx+=1
 
             mag[
                 row,
                 col
-            ] = embed_qim(
+            ]=embed_qim(
 
                 mag[
                     row,
@@ -83,9 +82,12 @@ def embed_payload_qim(
 
             group.append(
 
-                (row,col)
+                (
+                    row,
+                    col
+                )
             )
 
         grouped.append(group)
 
-    return mag, grouped
+    return mag,grouped
