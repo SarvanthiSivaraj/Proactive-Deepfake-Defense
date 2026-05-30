@@ -1,62 +1,91 @@
 import numpy as np
 
 
+def adaptive_delta(
+
+        value
+):
+
+    if value > 1.0:
+
+        return 0.5
+
+    elif value > 0.1:
+
+        return 0.10
+
+    else:
+
+        return 0.05
+
+
 def embed_qim(
 
         value,
 
-        bit,
-
-        delta=0.01
+        bit
 ):
 
-    q = np.round(
+    delta = adaptive_delta(
+
+        value
+    )
+
+    q = np.floor(
 
         value / delta
     )
 
     if bit == 0:
 
-        q = 2 * np.round(
-
-            q / 2
-        )
+        embedded = q*delta
 
     else:
 
-        q = (
+        embedded = (
 
-            2 *
+            q*delta
 
-            np.round(
+            +
 
-                q / 2
-            )
-
-        ) + 1
-
-    embedded = q * delta
+            delta/2
+        )
 
     return embedded
+
+
 def embed_payload_qim(
 
         magnitude,
 
         payload_bits,
 
-        start_row=100,
-
-        col=50
+        col=100
 ):
 
     mag = magnitude.copy()
 
-    for i, bit in enumerate(
+    energies = mag[:,col]
+
+    strongest_rows = (
+
+        energies.argsort()
+
+        [-len(payload_bits):]
+
+    )
+
+    strongest_rows = sorted(
+
+        strongest_rows
+    )
+
+    for row, bit in zip(
+
+            strongest_rows,
 
             payload_bits
     ):
-
-        row = start_row + i
 
         original = mag[
 
@@ -73,9 +102,9 @@ def embed_payload_qim(
 
         ] = embed_qim(
 
-                original,
+            original,
 
-                bit
+            bit
         )
 
-    return mag
+    return mag, strongest_rows

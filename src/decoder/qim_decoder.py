@@ -1,42 +1,72 @@
 import numpy as np
 
 
+def adaptive_delta(
+
+        value
+):
+
+    if value > 1.0:
+
+        return 0.5
+
+    elif value > 0.1:
+
+        return 0.10
+
+    else:
+
+        return 0.05
+
+
 def extract_qim(
+
+        value
+):
+
+    delta = adaptive_delta(
+
+        value
+    )
+
+    remainder = np.mod(
 
         value,
 
-        delta=0.01
-):
-
-    q = np.round(
-
-        value / delta
+        delta
     )
 
-    return int(
+    dist0 = abs(
 
-        q % 2
+        remainder-0
     )
+
+    dist1 = abs(
+
+        remainder-delta/2
+    )
+
+    if dist0 < dist1:
+
+        return 0
+
+    else:
+
+        return 1
+
 
 def extract_payload_qim(
 
         magnitude,
 
-        n_bits,
+        rows,
 
-        start_row=100,
-
-        col=50
+        col=100
 ):
 
-    bits = []
+    bits=[]
 
-    for i in range(
-
-            n_bits
-    ):
-
-        row = start_row + i
+    for row in rows:
 
         value = magnitude[
 
@@ -45,14 +75,12 @@ def extract_payload_qim(
             col
         ]
 
-        bit = extract_qim(
-
-            value
-        )
-
         bits.append(
 
-            bit
+            extract_qim(
+
+                value
+            )
         )
 
     return bits
