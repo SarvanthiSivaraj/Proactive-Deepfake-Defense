@@ -1,110 +1,116 @@
 import numpy as np
 
 
-def adaptive_delta(
-
-        value
-):
+def adaptive_delta(value):
 
     if value > 1.0:
-
-        return 0.5
+        return 0.50
 
     elif value > 0.1:
-
         return 0.10
 
     else:
-
         return 0.05
 
 
-def embed_qim(
+def embed_qim(value, bit):
 
-        value,
-
-        bit
-):
-
-    delta = adaptive_delta(
-
-        value
-    )
+    delta = adaptive_delta(value)
 
     q = np.floor(
-
         value / delta
     )
 
     if bit == 0:
 
-        embedded = q*delta
+        return q*delta
 
     else:
 
-        embedded = (
-
+        return (
             q*delta
-
             +
-
             delta/2
         )
-
-    return embedded
 
 
 def embed_payload_qim(
 
         magnitude,
 
-        payload_bits,
-
-        col=100
+        payload_bits
 ):
 
     mag = magnitude.copy()
 
-    energies = mag[:,col]
+    rows=[]
 
-    strongest_rows = (
+    base_col=200
+    col_step=10
 
-        energies.argsort()
+    REP=3
 
-        [-len(payload_bits):]
-
-    )
-
-    strongest_rows = sorted(
-
-        strongest_rows
-    )
-
-    for row, bit in zip(
-
-            strongest_rows,
+    for i, bit in enumerate(
 
             payload_bits
     ):
 
-        original = mag[
+        for rep in range(REP):
 
-            row,
+            col = (
 
-            col
-        ]
+                base_col
 
-        mag[
+                +
 
-            row,
+                i*col_step
 
-            col
+                +
 
-        ] = embed_qim(
+                rep*3
+            )
 
-            original,
+            if col >= mag.shape[1]:
 
-            bit
-        )
+                continue
 
-    return mag, strongest_rows
+            energies = mag[:,col]
+
+            valid_rows=np.arange(
+
+                50,
+
+                min(
+                    500,
+                    len(energies)
+                )
+            )
+
+            row = valid_rows[
+
+                np.argmax(
+                    energies[
+                        valid_rows
+                    ]
+                )
+            ]
+
+            rows.append(
+
+                (row,col)
+            )
+
+            original = mag[
+                row,
+                col
+            ]
+
+            mag[
+                row,
+                col
+            ] = embed_qim(
+                original,
+                bit
+            )
+
+    return mag, rows
