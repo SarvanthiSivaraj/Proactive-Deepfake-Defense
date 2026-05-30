@@ -5,14 +5,7 @@ sys.path.append(
     os.path.abspath(".")
 )
 
-SEED = 42
-
-if len(sys.argv) > 1:
-
-    SEED = int(
-        sys.argv[1]
-    )
-
+import numpy as np
 from reedsolo import RSCodec
 
 from src.preprocessing.loader import *
@@ -26,11 +19,7 @@ from src.payload.bitstream import *
 from src.evaluation.metrics import *
 
 
-# ---------- ECC ----------
-
-rsc = RSCodec(
-    16
-)
+rsc = RSCodec(16)
 
 payload = b"HELLO"
 
@@ -41,19 +30,9 @@ ecc_bytes = rsc.encode(
     payload
 )
 
-print("\nECC Bytes:")
-print(ecc_bytes)
-
 payload_bits = bytes_to_bits(
     ecc_bytes
 )
-
-print("\nTotal ECC Bits:")
-print(
-    len(payload_bits)
-)
-
-# ---------- LOAD AUDIO ----------
 
 audio,sr = load_audio(
 
@@ -68,18 +47,14 @@ mag,phase = split_mag_phase(
     stft
 )
 
-# ---------- EMBED ----------
-
 embedded_mag,groups = embed_payload_qim(
 
     mag,
 
     payload_bits,
 
-    seed=SEED
+    seed=42
 )
-
-# ---------- ROUNDTRIP ----------
 
 modified = merge_mag_phase(
 
@@ -92,29 +67,35 @@ watermarked = inverse_stft(
     modified
 )
 
-wm_stft = compute_stft(
-    watermarked
+# ---------- ATTACK ----------
+
+noise_std = 0.002
+
+attacked = watermarked + np.random.normal(
+
+    0,
+
+    noise_std,
+
+    len(watermarked)
 )
 
-wm_mag,_ = split_mag_phase(
-    wm_stft
+# ----------------------------
+
+attack_stft = compute_stft(
+    attacked
 )
 
-# ---------- EXTRACT ----------
+attack_mag,_ = split_mag_phase(
+    attack_stft
+)
 
 recovered_bits = extract_payload_qim(
 
-    wm_mag,
+    attack_mag,
 
     groups
 )
-
-print("\nRecovered Bits:")
-print(
-    recovered_bits[:80]
-)
-
-# ---------- BER ----------
 
 ber = compute_ber(
 
@@ -124,30 +105,12 @@ ber = compute_ber(
 )
 
 print("\nBER:")
-print(
-    ber
-)
-
-# ---------- BITS → BYTES ----------
+print(ber)
 
 recovered_bytes = bits_to_bytes(
 
     recovered_bits
 )
-
-print("\nRecovered Bytes:")
-print(
-    recovered_bytes
-)
-
-print("\nRecovered Byte Length:")
-print(
-    len(recovered_bytes)
-)
-
-# ---------- ECC DECODE ----------
-
-print("\nAttempting ECC Decode...")
 
 try:
 
@@ -156,13 +119,9 @@ try:
     )
 
     print("\nECC Success:")
-
-    print(
-        decoded[0]
-    )
+    print(decoded[0])
 
 except Exception as e:
 
-    print("\nECC Decode Failed:")
-
+    print("\nECC FAILED:")
     print(e)

@@ -1,116 +1,91 @@
 import numpy as np
 
+from src.sync.location_map import *
 
-def adaptive_delta(value):
-
-    if value > 1.0:
-        return 0.50
-
-    elif value > 0.1:
-        return 0.10
-
-    else:
-        return 0.05
+DELTA = 0.5
+REPEAT = 9
 
 
 def embed_qim(value, bit):
 
-    delta = adaptive_delta(value)
-
-    q = np.floor(
-        value / delta
+    remainder = np.mod(
+        value,
+        DELTA
     )
+
+    base = value - remainder
 
     if bit == 0:
 
-        return q*delta
+        target = 0.05
 
     else:
 
-        return (
-            q*delta
-            +
-            delta/2
-        )
+        target = 0.45
+
+    embedded = base + target
+
+    # strengthen 1-bit embedding
+
+    if bit == 1:
+
+        embedded += 0.15
+
+    return embedded
 
 
 def embed_payload_qim(
 
         magnitude,
 
-        payload_bits
+        payload_bits,
+
+        seed=42
 ):
 
     mag = magnitude.copy()
 
-    rows=[]
+    locations = generate_location_map(
 
-    base_col=200
-    col_step=10
+        magnitude,
 
-    REP=3
+        len(payload_bits)*REPEAT,
 
-    for i, bit in enumerate(
+        seed
+    )
 
-            payload_bits
-    ):
+    grouped=[]
 
-        for rep in range(REP):
+    idx=0
 
-            col = (
+    for bit in payload_bits:
 
-                base_col
+        group=[]
 
-                +
+        for _ in range(REPEAT):
 
-                i*col_step
+            row,col = locations[idx]
 
-                +
-
-                rep*3
-            )
-
-            if col >= mag.shape[1]:
-
-                continue
-
-            energies = mag[:,col]
-
-            valid_rows=np.arange(
-
-                50,
-
-                min(
-                    500,
-                    len(energies)
-                )
-            )
-
-            row = valid_rows[
-
-                np.argmax(
-                    energies[
-                        valid_rows
-                    ]
-                )
-            ]
-
-            rows.append(
-
-                (row,col)
-            )
-
-            original = mag[
-                row,
-                col
-            ]
+            idx += 1
 
             mag[
                 row,
                 col
             ] = embed_qim(
-                original,
+
+                mag[
+                    row,
+                    col
+                ],
+
                 bit
             )
 
-    return mag, rows
+            group.append(
+
+                (row,col)
+            )
+
+        grouped.append(group)
+
+    return mag, grouped

@@ -1,38 +1,18 @@
 import numpy as np
 
+DELTA = 0.5
 
-def adaptive_delta(value):
-
-    if value > 1.0:
-        return 0.50
-
-    elif value > 0.1:
-        return 0.10
-
-    else:
-        return 0.05
+THRESHOLD = 0.14
 
 
 def extract_qim(value):
 
-    delta = adaptive_delta(
-        value
-    )
-
-    remainder=np.mod(
+    remainder = np.mod(
         value,
-        delta
+        DELTA
     )
 
-    dist0=abs(
-        remainder-0
-    )
-
-    dist1=abs(
-        remainder-delta/2
-    )
-
-    if dist0 < dist1:
+    if remainder < THRESHOLD:
 
         return 0
 
@@ -45,53 +25,35 @@ def extract_payload_qim(
 
         magnitude,
 
-        rows
+        grouped_locations
 ):
 
     bits=[]
 
-    REP=3
+    for group in grouped_locations:
 
-    raw=[]
+        votes=[]
 
-    for row,col in rows:
+        for row,col in group:
 
-        value = magnitude[
-            row,
-            col
-        ]
+            votes.append(
 
-        raw.append(
+                extract_qim(
 
-            extract_qim(
-                value
+                    magnitude[
+                        row,
+                        col
+                    ]
+                )
             )
-        )
-
-    for i in range(
-
-            0,
-
-            len(raw),
-
-            REP
-    ):
-
-        chunk = raw[
-
-            i:i+REP
-        ]
-
-        voted = round(
-
-            np.mean(
-                chunk
-            )
-        )
 
         bits.append(
 
-            int(voted)
+            int(
+                np.mean(
+                    votes
+                ) >= 0.5
+            )
         )
 
     return bits
