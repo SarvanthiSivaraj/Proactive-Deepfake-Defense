@@ -1,0 +1,33 @@
+FINAL EXTENDED ATTACK SUITE
+
+Payload Bits: 3736
+
+NONE
+BER: 0.0393
+ECC SUCCESS
+Signature: True
+
+GAUSSIAN
+BER: 0.0388
+ECC SUCCESS
+Signature: True
+
+AMPLITUDE
+BER: 0.0372
+ECC SUCCESS
+Signature: True
+
+LOWPASS
+BER: 0.0337
+ECC SUCCESS
+Signature: True
+
+RESAMPLE
+BER: 0.0393
+ECC SUCCESS
+Signature: True
+
+CROP
+BER: 0.0412
+ECC SUCCESS
+Signature: True
