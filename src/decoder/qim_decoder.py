@@ -1,16 +1,20 @@
 import numpy as np
 
 DELTA = 0.5
-THRESHOLD = 0.145
+THRESHOLD = 0.18
+GROUP_TRIM = 7
+GROUP_THRESHOLD = 0.165
 
-# crop compensation
-COLUMN_SHIFT = -2
 
+def extract_qim(
 
-def extract_qim(value):
+        value
+):
 
-    remainder=np.mod(
+    remainder = np.mod(
+
         value,
+
         DELTA
     )
 
@@ -18,61 +22,53 @@ def extract_qim(value):
 
         return 0
 
-    return 1
+    else:
+
+        return 1
 
 
 def extract_payload_qim(
 
         magnitude,
+
         grouped_locations
 ):
 
-    bits=[]
-
-    cols=magnitude.shape[1]
+    bits = []
 
     for group in grouped_locations:
 
-        votes=[]
+        residues = []
 
-        for row,col in group:
+        for row, col in group:
 
-            shifted_col=col
+            residues.append(
 
-            # apply only when safe
-
-            if shifted_col < 0:
-
-                continue
-
-            if shifted_col >= cols:
-
-                continue
-
-            votes.append(
-
-                extract_qim(
+                np.mod(
 
                     magnitude[
                         row,
-                        shifted_col
-                    ]
+                        col
+                    ],
+
+                    DELTA
                 )
             )
 
-        if len(votes)==0:
+        bits.append(
 
-            bits.append(0)
+            int(
 
-        else:
+                np.mean(
 
-            bits.append(
+                    np.sort(
 
-                int(
-                    np.mean(
-                        votes
-                    )>=0.5
-                )
+                        residues
+                    )[:GROUP_TRIM]
+
+                ) >= GROUP_THRESHOLD
+
             )
+        )
 
     return bits

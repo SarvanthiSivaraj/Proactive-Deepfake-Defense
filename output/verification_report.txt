@@ -1,0 +1,29 @@
+AUTHENTICITY REPORT
+=====================
+
+Raw BER
+-------
+  BER: 0.0189
+
+ECC Status
+----------
+  Status: SUCCESS
+
+Payload Recovery Status
+-----------------------
+  Status: SUCCESS
+
+Signature Status
+----------------
+  Status: VALID
+  Detail: Signature verified.
+
+Final Authentication
+--------------------
+  AUTHENTIC AUDIO
+
+Recovered Metadata
+------------------
+  generator: VOICE_GEN_V1
+  id: AUDIO001
+

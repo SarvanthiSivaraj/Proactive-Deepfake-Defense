@@ -2,6 +2,7 @@ import sys
 import os
 import zlib
 import numpy as np
+import soundfile as sf
 
 sys.path.append(
     os.path.abspath(".")
@@ -106,13 +107,19 @@ watermarked=inverse_stft(
     )
 )
 
+sf.write(
+    "input_audio/speech.wav",
+    watermarked,
+    sr
+)
+
 def lowpass_attack(x):
 
     b,a=butter(
 
         4,
 
-        0.35,
+        0.5,
 
         btype="low"
     )

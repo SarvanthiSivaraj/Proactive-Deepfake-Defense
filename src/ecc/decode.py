@@ -1,4 +1,4 @@
-from reedsolo import RSCodec
+from reedsolo import RSCodec, ReedSolomonError
 
 
 def rs_decode(
@@ -13,9 +13,12 @@ def rs_decode(
         parity_bytes
     )
 
-    decoded = rsc.decode(
+    try:
+        decoded = rsc.decode(
 
-        encoded_payload
-    )
+            encoded_payload
+        )
 
-    return decoded[0]
+        return decoded[0]
+    except ReedSolomonError:
+        return None

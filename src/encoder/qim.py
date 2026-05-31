@@ -1,31 +1,40 @@
 import numpy as np
+import pickle
+import os
+
 from src.sync.location_map import *
 
-DELTA=0.5
-REPEAT=7
+DELTA = 0.5
+REPEAT = 9
 
 
-def embed_qim(value,bit):
+def embed_qim(
 
-    remainder=np.mod(
         value,
+
+        bit
+):
+
+    remainder = np.mod(
+
+        value,
+
         DELTA
     )
 
-    base=value-remainder
+    base = value - remainder
 
-    if bit==0:
+    if bit == 0:
 
-        target=0.05
+        target = 0.05
 
     else:
 
-        target=0.45
+        target = 0.45
 
-    embedded=base+target
+    embedded = base + target
 
-    # stronger 1-bit protection
-    if bit==1:
+    if bit == 1:
 
         embedded += 0.15
 
@@ -35,39 +44,41 @@ def embed_qim(value,bit):
 def embed_payload_qim(
 
         magnitude,
+
         payload_bits,
+
         seed=42
 ):
 
-    mag=magnitude.copy()
+    mag = magnitude.copy()
 
-    locations=generate_location_map(
+    locations = generate_location_map(
 
         magnitude,
 
-        len(payload_bits)*REPEAT,
+        len(payload_bits) * REPEAT,
 
         seed
     )
 
-    grouped=[]
+    grouped = []
 
-    idx=0
+    idx = 0
 
     for bit in payload_bits:
 
-        group=[]
+        group = []
 
         for _ in range(REPEAT):
 
-            row,col=locations[idx]
+            row, col = locations[idx]
 
-            idx+=1
+            idx += 1
 
             mag[
                 row,
                 col
-            ]=embed_qim(
+            ] = embed_qim(
 
                 mag[
                     row,
@@ -78,9 +89,39 @@ def embed_payload_qim(
             )
 
             group.append(
-                (row,col)
+                (
+                    row,
+                    col
+                )
             )
 
-        grouped.append(group)
+        grouped.append(
+            group
+        )
 
-    return mag,grouped
+    os.makedirs(
+        "metadata",
+        exist_ok=True
+    )
+
+    with open(
+        "metadata/grouped_locations.pkl",
+        "wb"
+    ) as f:
+
+        pickle.dump(
+            grouped,
+            f
+        )
+
+    with open(
+        "metadata/payload_bits.pkl",
+        "wb"
+    ) as f:
+
+        pickle.dump(
+            payload_bits,
+            f
+        )
+
+    return mag, grouped
