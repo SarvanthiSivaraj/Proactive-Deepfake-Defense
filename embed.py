@@ -1,4 +1,4 @@
-import os
+﻿import os
 import shutil
 import zlib
 import numpy as np
@@ -13,6 +13,7 @@ from src.decoder.qim_decoder import *
 
 from src.payload.serialize import *
 from src.payload.bitstream import *
+from src.payload.metadata import *
 
 from src.security.signature import *
 
@@ -62,6 +63,11 @@ def embed_audio(filename):
         stft
     )
 
+    source_hash=compute_audio_hash(
+        audio,
+        sr
+    )
+
     print(
         "STFT shape:",
         magnitude.shape
@@ -69,12 +75,9 @@ def embed_audio(filename):
 
     # ---------- deterministic metadata ----------
 
-    metadata={
-
-        "id":"AUDIO001",
-
-        "generator":"VOICE_GEN_V1"
-    }
+    metadata=generate_metadata(
+        source_hash=source_hash
+    )
 
     metadata_bytes=serialize_payload(
         metadata
@@ -263,26 +266,19 @@ def embed_audio(filename):
     )
 
     print(
-        "\nSaved:"
-    )
-
-    print(
+        "\nWatermarked audio saved to:",
         output_path
     )
 
     print(
+        "Copied to input for verification:",
         verify_ready_path
-    )
-
-    print(
-        "\nEMBED SUCCESS"
     )
 
 
 if __name__=="__main__":
 
     filename=input(
-
         "\nEnter audio filename: "
     )
 

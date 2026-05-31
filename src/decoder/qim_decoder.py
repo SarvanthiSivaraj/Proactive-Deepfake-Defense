@@ -53,6 +53,7 @@ def extract_payload_qim(
 
                     DELTA
                 )
+
             )
 
         bits.append(
@@ -64,6 +65,7 @@ def extract_payload_qim(
                     np.sort(
 
                         residues
+
                     )[:GROUP_TRIM]
 
                 ) >= GROUP_THRESHOLD
