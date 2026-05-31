@@ -34,7 +34,7 @@ def generate_location_map(
 
         e=energy[r]
 
-        if 0.1 < e < 10:
+        if 0.1<e<10:
 
             candidate_rows.append(
                 r
@@ -62,6 +62,15 @@ def generate_location_map(
     rng.shuffle(
         locations
     )
+
+    if len(locations)<n_locations:
+
+        raise ValueError(
+
+            f"Need {n_locations} locations "
+
+            f"but only {len(locations)} available."
+        )
 
     return locations[
         :n_locations

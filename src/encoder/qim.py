@@ -1,12 +1,11 @@
 import numpy as np
-
 from src.sync.location_map import *
 
-DELTA = 0.5
-REPEAT = 9
+DELTA=0.5
+REPEAT=7
 
 
-def embed_qim(value, bit):
+def embed_qim(value,bit):
 
     remainder=np.mod(
         value,
@@ -36,9 +35,7 @@ def embed_qim(value, bit):
 def embed_payload_qim(
 
         magnitude,
-
         payload_bits,
-
         seed=42
 ):
 
@@ -81,11 +78,7 @@ def embed_payload_qim(
             )
 
             group.append(
-
-                (
-                    row,
-                    col
-                )
+                (row,col)
             )
 
         grouped.append(group)

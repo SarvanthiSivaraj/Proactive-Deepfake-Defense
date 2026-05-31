@@ -23,55 +23,47 @@ from src.payload.bitstream import *
 from src.security.signature import *
 from src.evaluation.metrics import *
 
-# ==========================
-# SETTINGS
-# ==========================
-
-RS_PARITY = 160
-SEED = 42
+RS_PARITY=160
+SEED=42
 
 np.random.seed(
     SEED
 )
 
-rsc = RSCodec(
+rsc=RSCodec(
     RS_PARITY
 )
 
-# ==========================
-# BUILD PAYLOAD
-# ==========================
+metadata=generate_metadata()
 
-metadata = generate_metadata()
-
-metadata_bytes = serialize_payload(
+metadata_bytes=serialize_payload(
     metadata
 )
 
-signature = sign_payload(
+signature=sign_payload(
     metadata_bytes
 )
 
-packet = {
+packet={
 
-    "metadata": metadata,
+    "metadata":metadata,
 
-    "signature": signature
+    "signature":signature
 }
 
-packet_bytes = serialize_payload(
+packet_bytes=serialize_payload(
     packet
 )
 
-compressed = zlib.compress(
+compressed=zlib.compress(
     packet_bytes
 )
 
-ecc_bytes = rsc.encode(
+ecc_bytes=rsc.encode(
     compressed
 )
 
-payload_bits = bytes_to_bits(
+payload_bits=bytes_to_bits(
     ecc_bytes
 )
 
@@ -83,27 +75,19 @@ print(
     len(payload_bits)
 )
 
-# ==========================
-# LOAD AUDIO
-# ==========================
-
-audio,sr = load_audio(
+audio,sr=load_audio(
     "data/sample_audio/speech.wav"
 )
 
-stft = compute_stft(
+stft=compute_stft(
     audio
 )
 
-mag,phase = split_mag_phase(
+mag,phase=split_mag_phase(
     stft
 )
 
-# ==========================
-# EMBED
-# ==========================
-
-embedded_mag,groups = embed_payload_qim(
+embedded_mag,groups=embed_payload_qim(
 
     mag,
 
@@ -112,24 +96,19 @@ embedded_mag,groups = embed_payload_qim(
     seed=SEED
 )
 
-modified = merge_mag_phase(
+watermarked=inverse_stft(
 
-    embedded_mag,
+    merge_mag_phase(
 
-    phase
+        embedded_mag,
+
+        phase
+    )
 )
-
-watermarked = inverse_stft(
-    modified
-)
-
-# ==========================
-# ATTACK FUNCTIONS
-# ==========================
 
 def lowpass_attack(x):
 
-    b,a = butter(
+    b,a=butter(
 
         4,
 
@@ -147,17 +126,13 @@ def lowpass_attack(x):
 
 def resample_attack(x):
 
-    down = resample(
-
+    down=resample(
         x,
-
         len(x)//2
     )
 
-    up = resample(
-
+    up=resample(
         down,
-
         len(x)
     )
 
@@ -166,11 +141,11 @@ def resample_attack(x):
 
 def crop_attack(x):
 
-    cropped = x[
+    cropped=x[
         1000:
     ]
 
-    padded = np.pad(
+    padded=np.pad(
 
         cropped,
 
@@ -180,15 +155,9 @@ def crop_attack(x):
     return padded
 
 
-# ==========================
-# ATTACKS
-# ==========================
+attacks={
 
-attacks = {
-
-    "NONE":
-
-        watermarked,
+    "NONE":watermarked,
 
     "GAUSSIAN":
 
@@ -197,9 +166,7 @@ attacks = {
         np.random.normal(
 
             0,
-
             0.0003,
-
             len(watermarked)
         ),
 
@@ -226,10 +193,6 @@ attacks = {
         )
 }
 
-# ==========================
-# EVALUATION
-# ==========================
-
 print(
     "\nEXTENDED ATTACK SUITE"
 )
@@ -250,15 +213,13 @@ for attack_name,attacked_audio in attacks.items():
 
     try:
 
-        wm_stft = compute_stft(
+        wm_stft=compute_stft(
             attacked_audio
         )
 
-        wm_mag,_ = split_mag_phase(
+        wm_mag,_=split_mag_phase(
             wm_stft
         )
-
-        # ---------- CROP SHIFT CORRECTION ----------
 
         if attack_name=="CROP":
 
@@ -271,7 +232,6 @@ for attack_name,attacked_audio in attacks.items():
                 for row,col in group:
 
                     new_group.append(
-
                         (
                             row,
                             col-2
@@ -282,7 +242,7 @@ for attack_name,attacked_audio in attacks.items():
                     new_group
                 )
 
-            recovered_bits = extract_payload_qim(
+            recovered_bits=extract_payload_qim(
 
                 wm_mag,
 
@@ -291,16 +251,14 @@ for attack_name,attacked_audio in attacks.items():
 
         else:
 
-            recovered_bits = extract_payload_qim(
+            recovered_bits=extract_payload_qim(
 
                 wm_mag,
 
                 groups
             )
 
-        # ---------- METRICS ----------
-
-        ber = compute_ber(
+        ber=compute_ber(
 
             payload_bits,
 
@@ -315,33 +273,25 @@ for attack_name,attacked_audio in attacks.items():
             ber
         )
 
-        recovered_bytes = bits_to_bytes(
+        recovered_bytes=bits_to_bytes(
             recovered_bits
         )
 
-        print(
-            "\nRecovered Byte Length:"
-        )
-
-        print(
-            len(recovered_bytes)
-        )
-
-        decoded = rsc.decode(
+        decoded=rsc.decode(
 
             recovered_bytes
 
         )[0]
 
-        decompressed = zlib.decompress(
+        decompressed=zlib.decompress(
             decoded
         )
 
-        recovered_packet = deserialize_payload(
+        recovered_packet=deserialize_payload(
             decompressed
         )
 
-        verified = verify_signature(
+        verified=verify_signature(
 
             serialize_payload(
 

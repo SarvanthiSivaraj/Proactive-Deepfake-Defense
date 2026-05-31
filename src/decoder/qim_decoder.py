@@ -1,7 +1,7 @@
 import numpy as np
 
 DELTA = 0.5
-THRESHOLD = 0.14
+THRESHOLD = 0.145
 
 # crop compensation
 COLUMN_SHIFT = -2
@@ -24,7 +24,6 @@ def extract_qim(value):
 def extract_payload_qim(
 
         magnitude,
-
         grouped_locations
 ):
 
