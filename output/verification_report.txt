@@ -3,7 +3,7 @@ AUTHENTICITY REPORT
 
 Raw BER
 -------
-  BER: 0.0358
+  BER: 0.0371
 
 ECC Status
 ----------
@@ -21,9 +21,21 @@ Signature Status
 Provenance Hash Status
 ----------------------
   Source Hash: 129f20fd23689db4ab25aff24224ea9c53771fd8933595029f7d23d487895daf
-  Verified Audio Hash: 082d4963af829267377e4a5c42bcf2d5267c9b100da3a943167a2a6c74c02aca
+  Verified Audio Hash: da6f949a011678bc983fe1c5bb4091cb4264a6b0c29035d5be7cf3b390989ef6
   Status: SOURCE DIFFERENT FROM VERIFIED FILE
   Detail: Source audio hash differs from verified audio hash.
+
+ATTACK ANALYSIS
+---------------
+Likely Manipulation: PROTECTED DERIVATIVE
+Confidence: LOW
+Evidence:
+  BER profile: 0.0371
+  Hash status: MISMATCH
+  ECC correction pressure: 0.0371
+  Spectral difference: centroid=329.37, hf_ratio=0.001973, flatness=0.217327
+  Energy drift: rms=0.056136, peak=1.008562
+  Synchronization shift: edge_ratio=0.000493
 
 Final Authentication
 --------------------
@@ -33,7 +45,7 @@ Recovered Metadata
 ------------------
   ID: AUDIO001
   Generator: VOICE_GEN_V1
-  Timestamp: 2026-05-31 20:16:54
+  Timestamp: 2026-05-31 20:45:48
   Creator: Sarvanthikha
   Organization: Amrita University
   Model Version: ProactiveDefense-v1.0
@@ -54,7 +66,7 @@ Model Version:
 ProactiveDefense-v1.0
 
 Timestamp:
-2026-05-31 20:16:54
+2026-05-31 20:45:48
 
 PROVENANCE MODEL
 ----------------

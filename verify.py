@@ -13,6 +13,7 @@ from src.payload.serialize import *
 from src.payload.metadata import *
 
 from src.security.signature import *
+from src.security.attack_classifier import *
 
 from src.ecc.decode import rs_decode
 
@@ -401,7 +402,106 @@ def verify_audio(filename):
                 "  Detail: Source audio hash differs from verified audio hash.\n\n"
             )
 
-    # ---------- final auth ----------
+    # ---------- attack analysis ----------
+
+    attack_analysis=classify_attack(
+
+        audio,
+
+        sr,
+
+        magnitude,
+
+        ber,
+
+        source_hash_match=source_hash_match
+    )
+
+    report.append(
+        "ATTACK ANALYSIS\n"
+    )
+
+    report.append(
+        "---------------\n"
+    )
+
+    report.append(
+        f"Likely Manipulation: {attack_analysis['likely_manipulation']}\n"
+    )
+
+    report.append(
+        f"Confidence: {attack_analysis['confidence']}\n"
+    )
+
+    report.append(
+        "Evidence:\n"
+    )
+
+    report.append(
+        f"  BER profile: {attack_analysis['metrics']['ber']:.4f}\n"
+    )
+
+    report.append(
+        f"  Hash status: {'MATCH' if source_hash_match else 'MISMATCH'}\n"
+    )
+
+    report.append(
+        f"  ECC correction pressure: {attack_analysis['metrics']['ber']:.4f}\n"
+    )
+
+    report.append(
+        f"  Spectral difference: centroid={attack_analysis['metrics']['centroid']:.2f}, hf_ratio={attack_analysis['metrics']['hf_ratio']:.6f}, flatness={attack_analysis['metrics']['flatness']:.6f}\n"
+    )
+
+    report.append(
+        f"  Energy drift: rms={attack_analysis['metrics']['rms']:.6f}, peak={attack_analysis['metrics']['peak']:.6f}\n"
+    )
+
+    report.append(
+        f"  Synchronization shift: edge_ratio={attack_analysis['metrics']['edge_ratio']:.6f}\n\n"
+    )
+
+    if not sig_ok:
+
+        final_result="NOT AUTHENTIC"
+
+    elif attack_analysis["likely_manipulation"] == "LOWPASS FILTER" and attack_analysis["confidence"] == "HIGH":
+
+        final_result="LIKELY LOWPASS ATTACK"
+
+    elif attack_analysis["likely_manipulation"] == "AUTHENTIC ORIGINAL":
+
+        final_result="AUTHENTIC ORIGINAL"
+
+    elif attack_analysis["likely_manipulation"] == "PROTECTED DERIVATIVE":
+
+        final_result="AUTHENTIC PROTECTED DERIVATIVE"
+
+    elif attack_analysis["likely_manipulation"] in {
+
+        "GAUSSIAN NOISE",
+
+        "AMPLITUDE SCALING",
+
+        "RESAMPLING",
+
+        "CROPPING",
+
+        "COMPRESSION",
+
+        "UNKNOWN MODIFICATION"
+
+    }:
+
+        final_result="AUTHENTIC BUT MODIFIED"
+
+    elif sig_ok and source_hash_match:
+
+        final_result="AUTHENTIC ORIGINAL"
+
+    else:
+
+        final_result="AUTHENTIC PROTECTED DERIVATIVE"
 
     report.append(
         "Final Authentication\n"
@@ -411,23 +511,9 @@ def verify_audio(filename):
         "--------------------\n"
     )
 
-    if sig_ok and source_hash_match:
-
-        report.append(
-            "  AUTHENTIC PROTECTED SOURCE MATCH\n\n"
-        )
-
-    elif sig_ok:
-
-        report.append(
-            "  AUTHENTIC PROTECTED DERIVATIVE\n\n"
-        )
-
-    else:
-
-        report.append(
-            "  NOT AUTHENTIC\n\n"
-        )
+    report.append(
+        f"  {final_result}\n\n"
+    )
 
     # ---------- metadata ----------
 
