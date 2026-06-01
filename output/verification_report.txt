@@ -28,7 +28,11 @@ Provenance Hash Status
 ATTACK ANALYSIS
 ---------------
 Likely Manipulation: PROTECTED DERIVATIVE
-Confidence: LOW
+Confidence: HIGH
+Model Backend: random_forest
+Validation Accuracy: 1.000
+Rule Label: PROTECTED DERIVATIVE
+Rule Support: LOW
 Evidence:
   BER profile: 0.0370
   Hash status: MISMATCH

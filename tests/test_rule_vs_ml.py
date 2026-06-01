@@ -108,6 +108,7 @@ def make_variants(audio, seed):
 
 
 def test_rule_vs_ml_comparison():
+    print("Loading or training ML model...", flush=True)
     # Ensure ML model exists (train or load)
     train_attack_ml_model(force_retrain=False)
 
@@ -116,6 +117,7 @@ def test_rule_vs_ml_comparison():
     if not os.path.exists(baseline_path) and os.path.exists(MODEL_FILE):
         shutil.copyfile(MODEL_FILE, baseline_path)
 
+    print("Evaluating fixed attack variants...", flush=True)
     audio, sr = load_audio("input_audio/protected.wav")
     ber_values = {
         "clean": 0.035,
@@ -205,7 +207,9 @@ def test_rule_vs_ml_comparison():
 
     # Repeated-seed sanity check: retrain on the same source with different seeds
     # and confirm the ML backend stays stable on the same evaluation examples.
+    print("Running repeated-seed stability checks...", flush=True)
     for seed in [7, 21, 42, 77, 101]:
+        print(f"  Seed {seed}...", flush=True)
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_model = os.path.join(tmpdir, f"attack_ml_{seed}.joblib")
             train_attack_ml_model(force_retrain=True, model_path=tmp_model, random_state=seed)
@@ -233,6 +237,7 @@ def test_rule_vs_ml_comparison():
     # Write CSV artifact
     os.makedirs("metadata", exist_ok=True)
     csv_path = os.path.join("metadata", "rule_vs_ml.csv")
+    print("Writing comparison CSV artifact...", flush=True)
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
@@ -255,15 +260,15 @@ def test_rule_vs_ml_comparison():
     rule_accuracy = rule_correct / total
     ml_accuracy = ml_correct / total
 
-    print(f"Rule accuracy: {rule_accuracy:.3f}")
-    print(f"ML accuracy:   {ml_accuracy:.3f}")
+    print(f"Rule accuracy: {rule_accuracy:.3f}", flush=True)
+    print(f"ML accuracy:   {ml_accuracy:.3f}", flush=True)
     seed_stability = sum(seed_scores) / len(seed_scores)
-    print(f"Seed stability: {seed_stability:.3f}")
+    print(f"Seed stability: {seed_stability:.3f}", flush=True)
 
-    print()
-    print("Artifacts:")
-    print(" - CSV: metadata/rule_vs_ml.csv")
-    print(" - Baseline model: metadata/baseline_v1.joblib")
+    print(flush=True)
+    print("Artifacts:", flush=True)
+    print(" - CSV: metadata/rule_vs_ml.csv", flush=True)
+    print(" - Baseline model: metadata/baseline_v1.joblib", flush=True)
 
     # Requirements for Phase 4B validation:
     # - ML classifier must perform well and be stable across seeds
@@ -272,7 +277,7 @@ def test_rule_vs_ml_comparison():
     assert seed_stability >= 0.95
     # Report rule accuracy but don't fail the run if rules are imperfect
     if rule_accuracy < 1.0:
-        print("Note: rule-based classifier did not reach perfect accuracy; see CSV for details.")
+        print("Note: rule-based classifier did not reach perfect accuracy; see CSV for details.", flush=True)
 
 
 if __name__ == "__main__":

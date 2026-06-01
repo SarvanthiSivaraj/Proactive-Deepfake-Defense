@@ -13,6 +13,12 @@ def build_attack_report(analysis, source_hash_match):
     if analysis.get("validation_accuracy") is not None:
         lines.append(f"Validation Accuracy: {analysis['validation_accuracy']:.3f}\n")
 
+    if analysis.get("rule_label"):
+        lines.append(f"Rule Label: {analysis['rule_label']}\n")
+
+    if analysis.get("rule_confidence"):
+        lines.append(f"Rule Support: {analysis['rule_confidence']}\n")
+
     lines.append("Evidence:\n")
     lines.append(f"  BER profile: {metrics['ber']:.4f}\n")
     lines.append(f"  Hash status: {'MATCH' if source_hash_match else 'MISMATCH'}\n")
@@ -24,6 +30,12 @@ def build_attack_report(analysis, source_hash_match):
     lines.append(
         f"  Synchronization shift: edge_ratio={metrics['edge_ratio']:.6f}, column_shift_pressure={metrics['column_shift_pressure']:.6f}\n\n"
     )
+
+    if analysis.get("rule_evidence"):
+        lines.append("Rule Evidence:\n")
+        for item in analysis["rule_evidence"]:
+            lines.append(f"  - {item}\n")
+        lines.append("\n")
 
     return lines
 

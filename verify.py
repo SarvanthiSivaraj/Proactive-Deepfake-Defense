@@ -24,7 +24,7 @@ INPUT_DIR="input_audio"
 OUTPUT_DIR="output"
 
 RS_PARITY=160
-ATTACK_MODE=os.environ.get("FORENSIC_ATTACK_MODE", "rules").strip().lower()
+ATTACK_MODE=os.environ.get("FORENSIC_ATTACK_MODE", "hybrid").strip().lower()
 
 
 def verify_audio(filename):
@@ -407,7 +407,18 @@ def verify_audio(filename):
 
     # ---------- attack analysis ----------
 
-    if ATTACK_MODE == "ml":
+    if ATTACK_MODE == "rules":
+
+        attack_analysis=classify_attack_rules(
+            audio,
+            sr,
+            magnitude,
+            ber,
+            source_hash_match=source_hash_match,
+            ecc_success=ecc_ok,
+        )
+
+    elif ATTACK_MODE == "ml":
 
         attack_analysis=classify_attack_ml(
             audio,
@@ -420,7 +431,7 @@ def verify_audio(filename):
 
     else:
 
-        attack_analysis=classify_attack_rules(
+        rule_analysis=classify_attack_rules(
             audio,
             sr,
             magnitude,
@@ -428,6 +439,25 @@ def verify_audio(filename):
             source_hash_match=source_hash_match,
             ecc_success=ecc_ok,
         )
+
+        ml_analysis=classify_attack_ml(
+            audio,
+            sr,
+            magnitude,
+            ber,
+            source_hash_match=source_hash_match,
+            ecc_success=ecc_ok,
+        )
+
+        attack_analysis=dict(
+            ml_analysis
+        )
+
+        attack_analysis["rule_label"]=rule_analysis["likely_manipulation"]
+        attack_analysis["rule_confidence"]=rule_analysis["confidence"]
+        attack_analysis["rule_evidence"]=rule_analysis["evidence"]
+        attack_analysis["rule_scores"]=rule_analysis["scores"]
+        attack_analysis["rule_metrics"]=rule_analysis["metrics"]
 
     report.extend(
         build_attack_report(
