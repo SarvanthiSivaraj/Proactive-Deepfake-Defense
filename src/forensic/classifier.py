@@ -1,5 +1,7 @@
 from .confidence import estimate_confidence
 from .features import extract_forensic_features
+import os
+import joblib
 
 
 def classify_attack(audio, sr, magnitude, ber, source_hash_match=None, ecc_success=None):
@@ -92,6 +94,34 @@ def classify_attack(audio, sr, magnitude, ber, source_hash_match=None, ecc_succe
 
     best_label = max(scores, key=scores.get)
     confidence = estimate_confidence(scores)
+
+    # If ambiguous between LOWPASS and RESAMPLING, consult fallback model if available
+    sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    top_label, top_score = sorted_scores[0]
+    second_label, second_score = sorted_scores[1]
+
+    fallback_used = False
+    if {top_label, second_label} & {"LOWPASS FILTER", "RESAMPLING"} and (top_score - second_score) <= 1:
+        model_path = os.path.join("metadata", "rule_fallback.joblib")
+        if os.path.exists(model_path):
+            try:
+                pkg = joblib.load(model_path)
+                clf = pkg.get("model")
+                le = pkg.get("le")
+                feature_names = pkg.get("feature_names")
+                # build feature vector matching training (use saved feature_names when available)
+                if feature_names:
+                    feat_vec = [metrics.get(k, 0) for k in feature_names]
+                else:
+                    feat_vec = [metrics.get(k, 0) for k in sorted(metrics.keys())]
+                import numpy as np
+
+                pred = clf.predict(np.array(feat_vec).reshape(1, -1))
+                pred_label = le.inverse_transform(pred)[0]
+                best_label = pred_label
+                fallback_used = True
+            except Exception:
+                fallback_used = False
 
     if best_label == "NONE":
         if source_hash_match is False and metrics["ber"] >= 0.04:
