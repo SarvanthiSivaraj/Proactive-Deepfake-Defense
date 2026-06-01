@@ -1,0 +1,36 @@
+{
+  "best": {
+    "score": 0.55,
+    "params": {
+      "noise_flat": 0.09,
+      "noise_zcr": 0.1,
+      "noise2_flat": 0.2,
+      "noise2_zcr": 0.1,
+      "noise2_peak": 1.005,
+      "lowpass_hf": 0.0015,
+      "lowpass_centroid": 340.0,
+      "lowpass_flatness": 0.05,
+      "res_hf": 0.002,
+      "res_flat": 0.02,
+      "res_zcr": 0.09,
+      "rms_thresh": 0.0556,
+      "flat_low": 0.15,
+      "flat_high": 0.26,
+      "ber_thresh": 0.06,
+      "crop_ber": 0.05,
+      "crop_edge": 0.0004,
+      "crop_col": 0.02,
+      "crop_hf": 0.0018,
+      "crop_peak": 0.95,
+      "comp_hf": 0.0035,
+      "comp_centroid": 380.0,
+      "comp_flat": 0.35,
+      "none_ber": 0.05,
+      "none_flat": 0.09,
+      "none_hf": 0.0016
+    }
+  },
+  "n_samples": 680,
+  "n_seeds": 5,
+  "n_files": 17
+}

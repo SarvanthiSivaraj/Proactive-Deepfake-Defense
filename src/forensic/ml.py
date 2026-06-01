@@ -1,13 +1,14 @@
 import os
 import pickle
 from datetime import datetime
+from collections import Counter
 
 import joblib
 import numpy as np
 import warnings
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import LabelEncoder
 
 from src.preprocessing.loader import load_audio
@@ -69,40 +70,49 @@ def _collect_audio_files():
 
 
 def _gaussian_noise(audio, rng):
-    return audio + rng.normal(0, 0.0003, len(audio))
+    sigma = float(rng.uniform(0.00015, 0.0006))
+    return audio + rng.normal(0, sigma, len(audio))
 
 
 def _amplitude_scale(audio, _rng):
-    return audio * 0.98
+    scale = float(_rng.uniform(0.92, 1.05))
+    return audio * scale
 
 
 def _lowpass(audio, _rng):
     from scipy.signal import butter, filtfilt
 
-    b, a = butter(4, 0.5, btype="low")
+    cutoff = float(_rng.uniform(0.30, 0.65))
+    b, a = butter(4, cutoff, btype="low")
     return filtfilt(b, a, audio)
 
 
 def _resample_attack(audio, _rng):
     from scipy.signal import resample
 
-    down = resample(audio, len(audio) // 2)
+    factor = float(_rng.uniform(0.55, 0.85))
+    down = resample(audio, max(8, int(len(audio) * factor)))
     return resample(down, len(audio))
 
 
 def _crop_attack(audio, _rng):
-    cropped = audio[1500:]
-    return np.pad(cropped, (0, 1500))
+    crop_len = int(_rng.integers(800, min(4000, max(801, len(audio) // 3))))
+    cropped = audio[crop_len:]
+    return np.pad(cropped, (0, crop_len))[: len(audio)]
 
 
 def _compression_attack(audio, _rng):
-    clipped = np.clip(audio, -0.8, 0.8)
-    return np.round(clipped * 32.0) / 32.0
+    clip_level = float(_rng.uniform(0.65, 0.95))
+    quant = float(_rng.choice([16.0, 24.0, 32.0, 48.0]))
+    clipped = np.clip(audio, -clip_level, clip_level)
+    return np.round(clipped * quant) / quant
 
 
 def _unknown_attack(audio, _rng):
-    shifted = np.roll(audio, 733)
-    return shifted * np.linspace(0.35, 1.65, len(shifted))
+    shift = int(_rng.integers(256, 1400))
+    shifted = np.roll(audio, shift)
+    envelope = np.linspace(float(_rng.uniform(0.25, 0.5)), float(_rng.uniform(1.2, 1.8)), len(shifted))
+    return shifted * envelope
 
 
 VARIANT_BUILDERS = {
@@ -131,6 +141,7 @@ def _extract_features_for_audio(audio, sr, attack_name, ber):
 def build_attack_dataset(random_state=42):
     features = []
     labels = []
+    groups = []
 
     audio_files = _collect_audio_files()
     if not audio_files:
@@ -164,8 +175,9 @@ def build_attack_dataset(random_state=42):
             )
             features.append(_feature_vector(metrics))
             labels.append(LABEL_MAP[attack_name])
+            groups.append(audio_file)
 
-    return np.vstack(features), np.array(labels, dtype=object)
+    return np.vstack(features), np.array(labels, dtype=object), np.array(groups, dtype=object)
 
 
 def _candidate_models(random_state=42):
@@ -223,34 +235,29 @@ def train_attack_ml_model(force_retrain=False, model_path=MODEL_FILE, random_sta
     if os.path.exists(model_path) and not force_retrain:
         return joblib.load(model_path)
 
-    X, y = build_attack_dataset(random_state=random_state)
+    X, y, groups = build_attack_dataset(random_state=random_state)
     encoder = LabelEncoder()
     y_encoded = encoder.fit_transform(y)
 
-    stratify = y_encoded if len(np.unique(y_encoded)) > 1 else None
-    X_train, X_val, y_train, y_val = train_test_split(
-        X,
-        y_encoded,
-        test_size=0.25,
-        random_state=random_state,
-        stratify=stratify,
-    )
+    # Keep variants from the same source audio in the same split to avoid leakage.
+    splitter = GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=random_state)
+    train_indices, val_indices = next(splitter.split(X, y_encoded, groups=groups))
+    X_train, X_val = X[train_indices], X[val_indices]
+    y_train, y_val = y_encoded[train_indices], y_encoded[val_indices]
+
+    train_label_counts = Counter(y_train)
+    val_label_counts = Counter(y_val)
+    if not train_label_counts or not val_label_counts:
+        raise RuntimeError("Group-aware split produced an empty train or validation set.")
 
     best_package = None
     best_accuracy = -1.0
 
     for backend, model in _candidate_models(random_state=random_state):
         try:
-            # Some model wrappers (e.g., LightGBM sklearn wrapper) may emit a
-            # UserWarning when predicting with a numpy array if the fitted
-            # model stored feature names. Silence that specific warning here
-            # during training/evaluation to avoid noisy output.
+            # Silence noisy UserWarnings from optional backends during fit/predict
             with warnings.catch_warnings():
-                warnings.filterwarnings(
-                    "ignore",
-                    message="X does not have valid feature names",
-                    category=UserWarning,
-                )
+                warnings.simplefilter("ignore", category=UserWarning)
                 model.fit(X_train, y_train)
                 predictions = model.predict(X_val)
             accuracy = accuracy_score(y_val, predictions)
@@ -309,11 +316,7 @@ def classify_attack_ml(audio, sr, magnitude, ber, source_hash_match=None, ecc_su
     # feature names. Silence only that specific warning here to avoid
     # noisy output during CLI/test runs.
     with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            message="X does not have valid feature names",
-            category=UserWarning,
-        )
+        warnings.simplefilter("ignore", category=UserWarning)
         probabilities = model.predict_proba(vector)[0]
         encoded_prediction = int(model.predict(vector)[0])
     predicted_label = encoder.inverse_transform([encoded_prediction])[0]
