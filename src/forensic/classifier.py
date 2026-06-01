@@ -42,17 +42,17 @@ def classify_attack(audio, sr, magnitude, ber, source_hash_match=None, ecc_succe
             "Noise-like flatness and energy disturbance reinforce the Gaussian signature.",
         )
 
-    if metrics["hf_ratio"] <= 0.0015 and metrics["centroid"] <= 323.0:
+    if metrics["hf_ratio"] <= 0.0015 and metrics["centroid"] <= 340.0 and metrics["flatness"] <= 0.05:
         add_score(
             "LOWPASS FILTER",
             5,
             "High-frequency energy dropped and the spectral centroid shifted downward.",
         )
 
-    if metrics["hf_ratio"] <= 0.0018 and metrics["flatness"] <= 0.002 and metrics["zcr"] <= 0.085:
+    if metrics["hf_ratio"] <= 0.002 and metrics["flatness"] <= 0.02 and metrics["zcr"] <= 0.09:
         add_score(
             "RESAMPLING",
-            4,
+            6,
             "Very low spectral flatness with reduced high-frequency energy suggests resampling artifacts.",
         )
 
