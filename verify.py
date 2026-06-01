@@ -1,4 +1,4 @@
-﻿import os
+import os
 import pickle
 import numpy as np
 import zlib
@@ -13,7 +13,9 @@ from src.payload.serialize import *
 from src.payload.metadata import *
 
 from src.security.signature import *
-from src.security.attack_classifier import *
+from src.forensic.classifier import classify_attack as classify_attack_rules
+from src.forensic.ml import classify_attack_ml
+from src.forensic.report import build_attack_report, decide_final_authentication
 
 from src.ecc.decode import rs_decode
 
@@ -22,6 +24,7 @@ INPUT_DIR="input_audio"
 OUTPUT_DIR="output"
 
 RS_PARITY=160
+ATTACK_MODE=os.environ.get("FORENSIC_ATTACK_MODE", "rules").strip().lower()
 
 
 def verify_audio(filename):
@@ -404,104 +407,42 @@ def verify_audio(filename):
 
     # ---------- attack analysis ----------
 
-    attack_analysis=classify_attack(
+    if ATTACK_MODE == "ml":
 
-        audio,
-
-        sr,
-
-        magnitude,
-
-        ber,
-
-        source_hash_match=source_hash_match
-    )
-
-    report.append(
-        "ATTACK ANALYSIS\n"
-    )
-
-    report.append(
-        "---------------\n"
-    )
-
-    report.append(
-        f"Likely Manipulation: {attack_analysis['likely_manipulation']}\n"
-    )
-
-    report.append(
-        f"Confidence: {attack_analysis['confidence']}\n"
-    )
-
-    report.append(
-        "Evidence:\n"
-    )
-
-    report.append(
-        f"  BER profile: {attack_analysis['metrics']['ber']:.4f}\n"
-    )
-
-    report.append(
-        f"  Hash status: {'MATCH' if source_hash_match else 'MISMATCH'}\n"
-    )
-
-    report.append(
-        f"  ECC correction pressure: {attack_analysis['metrics']['ber']:.4f}\n"
-    )
-
-    report.append(
-        f"  Spectral difference: centroid={attack_analysis['metrics']['centroid']:.2f}, hf_ratio={attack_analysis['metrics']['hf_ratio']:.6f}, flatness={attack_analysis['metrics']['flatness']:.6f}\n"
-    )
-
-    report.append(
-        f"  Energy drift: rms={attack_analysis['metrics']['rms']:.6f}, peak={attack_analysis['metrics']['peak']:.6f}\n"
-    )
-
-    report.append(
-        f"  Synchronization shift: edge_ratio={attack_analysis['metrics']['edge_ratio']:.6f}\n\n"
-    )
-
-    if not sig_ok:
-
-        final_result="NOT AUTHENTIC"
-
-    elif attack_analysis["likely_manipulation"] == "LOWPASS FILTER" and attack_analysis["confidence"] == "HIGH":
-
-        final_result="LIKELY LOWPASS ATTACK"
-
-    elif attack_analysis["likely_manipulation"] == "AUTHENTIC ORIGINAL":
-
-        final_result="AUTHENTIC ORIGINAL"
-
-    elif attack_analysis["likely_manipulation"] == "PROTECTED DERIVATIVE":
-
-        final_result="AUTHENTIC PROTECTED DERIVATIVE"
-
-    elif attack_analysis["likely_manipulation"] in {
-
-        "GAUSSIAN NOISE",
-
-        "AMPLITUDE SCALING",
-
-        "RESAMPLING",
-
-        "CROPPING",
-
-        "COMPRESSION",
-
-        "UNKNOWN MODIFICATION"
-
-    }:
-
-        final_result="AUTHENTIC BUT MODIFIED"
-
-    elif sig_ok and source_hash_match:
-
-        final_result="AUTHENTIC ORIGINAL"
+        attack_analysis=classify_attack_ml(
+            audio,
+            sr,
+            magnitude,
+            ber,
+            source_hash_match=source_hash_match,
+            ecc_success=ecc_ok,
+        )
 
     else:
 
-        final_result="AUTHENTIC PROTECTED DERIVATIVE"
+        attack_analysis=classify_attack_rules(
+            audio,
+            sr,
+            magnitude,
+            ber,
+            source_hash_match=source_hash_match,
+            ecc_success=ecc_ok,
+        )
+
+    report.extend(
+        build_attack_report(
+            attack_analysis,
+            source_hash_match,
+        )
+    )
+
+    final_result=decide_final_authentication(
+        sig_ok,
+        source_hash_match,
+        attack_analysis,
+    )
+
+    # ---------- final result ----------
 
     report.append(
         "Final Authentication\n"
