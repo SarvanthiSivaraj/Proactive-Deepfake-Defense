@@ -35,42 +35,33 @@ def extract_payload_qim(
 ):
 
     bits = []
+    n_rows, n_cols = magnitude.shape[:2]
 
     for group in grouped_locations:
-
         residues = []
 
         for row, col in group:
+            # ensure indices are integers
+            try:
+                r = int(row)
+                c = int(col)
+            except Exception:
+                continue
 
-            residues.append(
+            # skip out-of-bounds coordinates
+            if r < 0 or c < 0 or r >= n_rows or c >= n_cols:
+                continue
 
-                np.mod(
+            residues.append(np.mod(magnitude[r, c], DELTA))
 
-                    magnitude[
-                        row,
-                        col
-                    ],
+        if len(residues) == 0:
+            # If no valid residues for this group, treat as 0 (safe default)
+            bits.append(0)
+            continue
 
-                    DELTA
-                )
-
-            )
-
-        bits.append(
-
-            int(
-
-                np.mean(
-
-                    np.sort(
-
-                        residues
-
-                    )[:GROUP_TRIM]
-
-                ) >= GROUP_THRESHOLD
-
-            )
-        )
+        # use the smallest GROUP_TRIM residues (or all if fewer available)
+        trimmed = np.sort(residues)[:GROUP_TRIM]
+        bit = int(np.mean(trimmed) >= GROUP_THRESHOLD)
+        bits.append(bit)
 
     return bits

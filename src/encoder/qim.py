@@ -52,14 +52,24 @@ def embed_payload_qim(
 
     mag = magnitude.copy()
 
+    requested_locations = len(payload_bits) * REPEAT
     locations = generate_location_map(
 
         magnitude,
 
-        len(payload_bits) * REPEAT,
+        requested_locations,
 
         seed
     )
+
+    if len(locations) < len(payload_bits):
+        raise ValueError(
+            f"Not enough QIM locations for payload: need at least {len(payload_bits)} locations, got {len(locations)}."
+        )
+
+    repeat_count = min(REPEAT, max(1, len(locations) // len(payload_bits)))
+    usable_locations = len(payload_bits) * repeat_count
+    locations = locations[:usable_locations]
 
     grouped = []
 
@@ -69,7 +79,7 @@ def embed_payload_qim(
 
         group = []
 
-        for _ in range(REPEAT):
+        for _ in range(repeat_count):
 
             row, col = locations[idx]
 
