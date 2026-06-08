@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+from datetime import datetime, timezone
 import hashlib
 
 import numpy as np
@@ -7,7 +7,6 @@ import numpy as np
 DEFAULT_AUDIO_ID = "AUDIO001"
 DEFAULT_GENERATOR = "VOICE_GEN_V1"
 DEFAULT_CREATOR = "Sarvanthikha"
-DEFAULT_ORGANIZATION = "Amrita University"
 DEFAULT_MODEL_VERSION = "ProactiveDefense-v1.0"
 
 
@@ -41,7 +40,6 @@ def generate_metadata(
         audio_id=DEFAULT_AUDIO_ID,
         generator=DEFAULT_GENERATOR,
         creator=DEFAULT_CREATOR,
-        organization=DEFAULT_ORGANIZATION,
     model_version=DEFAULT_MODEL_VERSION
 ):
 
@@ -62,8 +60,6 @@ def generate_metadata(
         "timestamp":timestamp,
 
         "creator":creator,
-
-        "organization":organization,
 
         "model_version":model_version,
 

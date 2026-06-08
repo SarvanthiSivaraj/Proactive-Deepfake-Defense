@@ -4,3 +4,4 @@ scikit-learn
 joblib
 numpy
 scipy
+shap>=0.40.0

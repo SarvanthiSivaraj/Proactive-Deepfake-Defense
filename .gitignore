@@ -18,3 +18,21 @@ keys/private_key.pem
 
 # Optional (if regenerating keys locally)
 keys/public_key.pem
+
+# Generated outputs
+output/
+metadata/*.pkl
+*.joblib
+*.bak
+*.b64
+
+
+# Streamlit cache
+.streamlit/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Datasets
+dataset/

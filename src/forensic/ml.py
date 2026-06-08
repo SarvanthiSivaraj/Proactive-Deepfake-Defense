@@ -2,6 +2,8 @@ import os
 import pickle
 from datetime import datetime
 from collections import Counter
+from functools import lru_cache
+
 
 import joblib
 import numpy as np
@@ -279,12 +281,16 @@ def train_attack_ml_model(force_retrain=False, model_path=MODEL_FILE, random_sta
         raise RuntimeError("No ML attack classifier could be trained.")
 
     joblib.dump(best_package, model_path)
+    load_attack_ml_model.cache_clear()
     return best_package
 
 
+@lru_cache(maxsize=4)
 def load_attack_ml_model(model_path=MODEL_FILE):
     if not os.path.exists(model_path):
-        return train_attack_ml_model(model_path=model_path)
+        model = train_attack_ml_model(model_path=model_path)
+        load_attack_ml_model.cache_clear()
+        return model
     return joblib.load(model_path)
 
 

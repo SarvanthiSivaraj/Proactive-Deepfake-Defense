@@ -44,29 +44,8 @@ def decide_final_authentication(sig_ok, source_hash_match, analysis):
     if not sig_ok:
         return "NOT AUTHENTIC"
 
-    label = analysis["likely_manipulation"]
-    confidence = analysis["confidence"]
-
-    if label == "LOWPASS FILTER" and confidence == "HIGH":
-        return "LIKELY LOWPASS ATTACK"
-
-    if label == "AUTHENTIC ORIGINAL":
-        return "AUTHENTIC ORIGINAL"
-
-    if label == "PROTECTED DERIVATIVE":
-        return "AUTHENTIC PROTECTED DERIVATIVE"
-
-    if label in {
-        "GAUSSIAN NOISE",
-        "AMPLITUDE SCALING",
-        "RESAMPLING",
-        "CROPPING",
-        "COMPRESSION",
-        "UNKNOWN MODIFICATION",
-    }:
-        return "AUTHENTIC BUT MODIFIED"
-
-    if sig_ok and source_hash_match:
-        return "AUTHENTIC ORIGINAL"
-
-    return "AUTHENTIC PROTECTED DERIVATIVE"
+    # Signature is valid — the file is cryptographically authenticated.
+    # source_hash_match=True  → exact original file is verified (AUTHENTIC)
+    # source_hash_match=False → a watermarked/derivative of the original (AUTHENTIC)
+    # source_hash_match=None  → hash check skipped (still AUTHENTIC if sig is valid)
+    return "AUTHENTIC"
